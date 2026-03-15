@@ -5,6 +5,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 TOKEN = "8791517471:AAEfwJ5iJpTJfR72SggWSIg20Tfi1x-TBJU"
 
 BROKER = "broker.hivemq.com"
+# PORT 8884
 TOPIC = "espeIoTUTP"
 
 client = mqtt.Client()
