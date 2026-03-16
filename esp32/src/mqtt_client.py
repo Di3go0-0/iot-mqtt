@@ -1,8 +1,11 @@
-import machine
-import ubinascii
+import ujson
 import time
+from machine import Pin,
+import ubinascii
 from umqtt.robust import MQTTClient
-from machine import Pin
+import machine 
+
+led = Pin(2, Pin.OUT)
 
 
 def conectar_mqtt(host="test.mosquitto.org", puerto="1883"):
@@ -53,9 +56,29 @@ def sub_cb(topic, msg):
     print(topic, msg, msg.decode())
 
 
+def sub_cb_json(topic, msg):
+    try:
+        data = ujson.loads(msg)
+
+        times = data["times"]
+        delay = data["delay"]
+
+        print("Veces:", times)
+        print("Delay:", delay)
+
+        for i in range(times):
+            led.on()
+            time.sleep_ms(delay)
+
+            led.off()
+            time.sleep_ms(delay)
+
+    except Exception as e:
+        print("Error:", e)
+
+
 def suscribirse(cliente, topico):
-    cliente.set_callback(sub_cb)
+    cliente.set_callback(sub_cb_json)
     cliente.subscribe(topico)
     while True:
         cliente.check_msg()
-
