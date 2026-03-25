@@ -1,7 +1,6 @@
 import network
 import socket
 from wifi_connection import connect
-from network_params import write_params
 
 PORTAL_HTML = """\
 <!DOCTYPE html>
@@ -76,7 +75,6 @@ def start_portal(ap_ssid="esp32ghoul", ap_password="1223334444"):
                 if ssid:
                     print("Intentando conectar a:", ssid)
                     if connect(ssid, password):
-                        write_params(ssid, password)
                         _send_response(conn, SUCCESS_HTML)
                         conn.close()
                         ap.active(False)
