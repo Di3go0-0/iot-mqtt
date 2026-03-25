@@ -47,5 +47,7 @@ def suscribirse(cliente, topico="ghoulLed"):
     cliente.set_callback(_on_message)
     cliente.subscribe(topico)
     print("Suscrito a:", topico)
-    while True:
-        cliente.check_msg()
+
+
+def publicar(cliente, topico, data):
+    cliente.publish(topico, ujson.dumps(data))
