@@ -23,13 +23,22 @@ def conectar_mqtt(host="broker.hivemq.com", puerto=1883):
 def _on_message(topic, msg):
     try:
         data = ujson.loads(msg)
-        status = data.get("statusLed", None)
-        if status == 1:
-            led_d4.on()
-            print("LED D4 ON")
-        elif status == 0:
-            led_d4.off()
-            print("LED D4 OFF")
+        print("Mensaje recibido:", data)
+
+        if "statusLed" in data:
+            status = data["statusLed"]
+            if status == 1:
+                led_d4.on()
+                print("LED D4 ON")
+            elif status == 0:
+                led_d4.off()
+                print("LED D4 OFF")
+
+        if "toggle" in data:
+            if data["toggle"]:
+                led_d4.value(not led_d4.value())
+                print("LED D4 toggled:", "ON" if led_d4.value() else "OFF")
+
     except Exception as e:
         print("Error procesando mensaje:", e)
 
