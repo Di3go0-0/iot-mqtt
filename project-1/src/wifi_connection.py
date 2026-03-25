@@ -5,7 +5,7 @@ from machine import Pin
 led = Pin(2, Pin.OUT)
 
 
-def connect(ssid, password, max_attempts=2):
+def connect(ssid, password, timeout_ms=5000):
     print("Conectando a WiFi:", ssid)
 
     sta = network.WLAN(network.WLAN.IF_STA)
@@ -19,20 +19,22 @@ def connect(ssid, password, max_attempts=2):
 
     sta.connect(ssid, password)
 
-    attempts = max_attempts * 4  # 4 parpadeos por intento (~4s por intento)
+    start = utime.ticks_ms()
 
-    while not sta.isconnected() and attempts > 0:
+    while not sta.isconnected():
+        if utime.ticks_diff(utime.ticks_ms(), start) > timeout_ms:
+            break
         led.on()
         utime.sleep_ms(200)
         led.off()
         utime.sleep_ms(800)
-        attempts -= 1
 
     if sta.isconnected():
         print("Conectado! IP:", sta.ifconfig()[0])
         led.on()
         return True
     else:
-        print("No se pudo conectar después de", max_attempts, "intentos")
+        print("No se pudo conectar en", timeout_ms // 1000, "segundos")
+        sta.disconnect()
         led.off()
         return False

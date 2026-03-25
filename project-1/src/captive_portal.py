@@ -1,5 +1,6 @@
 import network
 import socket
+import utime
 from wifi_connection import connect
 
 PORTAL_HTML = """\
@@ -8,22 +9,29 @@ PORTAL_HTML = """\
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configurar WiFi</title>
+    <title>WiFi Setup</title>
     <style>
         body { font-family: sans-serif; text-align: center; margin-top: 50px; background: #1a1a2e; color: #eee; }
         input { padding: 10px; margin: 5px; width: 200px; border-radius: 5px; border: 1px solid #444; }
         button { padding: 10px 30px; margin-top: 10px; background: #0f3460; color: white; border: none; border-radius: 5px; cursor: pointer; }
         button:hover { background: #16213e; }
         h2 { color: #e94560; }
+        #status { margin-top: 15px; color: #f0a500; display: none; }
     </style>
 </head>
 <body>
-    <h2>Configurar WiFi</h2>
-    <form action="/" method="get">
-        <input name="ssid" placeholder="Nombre de la red"><br>
-        <input name="password" type="password" placeholder="Contraseña"><br>
-        <button type="submit">Conectar</button>
+    <h2>WiFi Setup</h2>
+    <form id="wform" action="/" method="get">
+        <input name="ssid" placeholder="Network name (SSID)"><br>
+        <input name="password" type="password" placeholder="Password"><br>
+        <button type="submit">Connect</button>
     </form>
+    <p id="status">Trying to connect...</p>
+    <script>
+        document.getElementById('wform').onsubmit = function() {
+            document.getElementById('status').style.display = 'block';
+        };
+    </script>
 </body>
 </html>
 """
@@ -31,10 +39,45 @@ PORTAL_HTML = """\
 SUCCESS_HTML = """\
 <!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>Conectado</title>
+<head><meta charset="UTF-8"><title>Connected</title>
 <style>body{font-family:sans-serif;text-align:center;margin-top:50px;background:#1a1a2e;color:#eee;}h2{color:#0f3460;}</style>
 </head>
-<body><h2>Conectado exitosamente!</h2><p>El ESP32 se ha conectado a la red WiFi.</p></body>
+<body><h2>Connected successfully!</h2><p>The ESP32 is now connected to the WiFi network.</p></body>
+</html>
+"""
+
+ERROR_HTML = """\
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Error</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; background: #1a1a2e; color: #eee; }
+        input { padding: 10px; margin: 5px; width: 200px; border-radius: 5px; border: 1px solid #444; }
+        button { padding: 10px 30px; margin-top: 10px; background: #0f3460; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #16213e; }
+        h2 { color: #e94560; }
+        .error { color: #e94560; margin-bottom: 15px; }
+        #status { margin-top: 15px; color: #f0a500; display: none; }
+    </style>
+</head>
+<body>
+    <h2>Connection Error</h2>
+    <p class="error">Invalid credentials or network not found. Please try again.</p>
+    <form id="wform" action="/" method="get">
+        <input name="ssid" placeholder="Network name (SSID)"><br>
+        <input name="password" type="password" placeholder="Password"><br>
+        <button type="submit">Connect</button>
+    </form>
+    <p id="status">Trying to connect...</p>
+    <script>
+        document.getElementById('wform').onsubmit = function() {
+            document.getElementById('status').style.display = 'block';
+        };
+    </script>
+</body>
 </html>
 """
 
@@ -77,10 +120,11 @@ def start_portal(ap_ssid="esp32ghoul", ap_password="1223334444"):
                     if connect(ssid, password):
                         _send_response(conn, SUCCESS_HTML)
                         conn.close()
+                        utime.sleep(3)
                         ap.active(False)
                         break
                     else:
-                        _send_response(conn, PORTAL_HTML)
+                        _send_response(conn, ERROR_HTML)
                         conn.close()
                         continue
 
