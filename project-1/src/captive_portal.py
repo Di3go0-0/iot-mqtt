@@ -100,36 +100,43 @@ def start_portal(ap_ssid="esp32ghoul", ap_password="1223334444"):
     try:
         while True:
             conn, addr = server.accept()
-            request = conn.recv(1024).decode()
-            request_line = request.split("\n")[0] if request else ""
+            try:
+                request = conn.recv(1024).decode()
+                request_line = request.split("\n")[0] if request else ""
 
-            # Revisar si viene con parámetros ssid y password
-            if "ssid=" in request_line:
-                path = request_line.split(" ")[1]
-                query = path.split("?")[1]
-                params = {}
-                for pair in query.split("&"):
-                    key, value = pair.split("=", 1)
-                    params[key] = value
+                # Revisar si viene con parámetros ssid y password
+                if "ssid=" in request_line:
+                    path = request_line.split(" ")[1]
+                    query = path.split("?")[1]
+                    params = {}
+                    for pair in query.split("&"):
+                        key, value = pair.split("=", 1)
+                        params[key] = value
 
-                ssid = params.get("ssid", "")
-                password = params.get("password", "")
+                    ssid = params.get("ssid", "")
+                    password = params.get("password", "")
 
-                if ssid:
-                    print("Intentando conectar a:", ssid)
-                    if connect(ssid, password):
-                        _send_response(conn, SUCCESS_HTML)
-                        conn.close()
-                        utime.sleep(3)
-                        ap.active(False)
-                        break
-                    else:
-                        _send_response(conn, ERROR_HTML)
-                        conn.close()
-                        continue
+                    if ssid:
+                        print("Intentando conectar a:", ssid)
+                        if connect(ssid, password):
+                            _send_response(conn, SUCCESS_HTML)
+                            conn.close()
+                            utime.sleep(3)
+                            ap.active(False)
+                            break
+                        else:
+                            _send_response(conn, ERROR_HTML)
+                            conn.close()
+                            continue
 
-            _send_response(conn, PORTAL_HTML)
-            conn.close()
+                _send_response(conn, PORTAL_HTML)
+            except OSError:
+                pass
+            finally:
+                try:
+                    conn.close()
+                except:
+                    pass
 
     except KeyboardInterrupt:
         print("Cerrando portal...")
