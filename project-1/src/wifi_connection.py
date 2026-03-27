@@ -5,10 +5,11 @@ from machine import Pin
 led = Pin(2, Pin.OUT)
 
 
+sta = network.WLAN(network.WLAN.IF_STA)
+
+
 def connect(ssid, password, timeout_ms=5000):
     print("Conectando a WiFi:", ssid)
-
-    sta = network.WLAN(network.WLAN.IF_STA)
     sta.active(False)
     utime.sleep(1)
     sta.active(True)
