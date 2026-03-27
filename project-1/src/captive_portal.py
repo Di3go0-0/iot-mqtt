@@ -84,8 +84,8 @@ ERROR_HTML = """\
 
 def start_portal(ap_ssid="esp32ghoul", ap_password="1223334444"):
     ap = network.WLAN(network.WLAN.IF_AP)
-    ap.active(True)
-    ap.config(essid=ap_ssid, password=ap_password, authmode=3)
+    ap.active(True5
+    ap.config(essid=ap_ssid, password=ap_password, authmode=3, max_clients=1)
 
     print("AP activo:", ap_ssid)
     print("IP del portal:", ap.ifconfig()[0])
