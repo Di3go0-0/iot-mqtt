@@ -9,13 +9,13 @@ print("Conectando al broker MQTT...")
 client = conectar_mqtt("broker.hivemq.com", 1883)
 
 if client:
-    suscribirse(client, "ghoulLed")
+    suscribirse(client, "8aPublicar")
 
     while True:
         client.check_msg()
-        if fue_presionado():
-            print("Botón presionado, enviando toggle a 8aled")
-            publicar(client, "8aled", {"toggle": True})
-            # publicar(client, "ghoulLed", {"toggle": True})
+        presionado, state = fue_presionado()
+        if presionado:
+            print("Botón state:", state)
+            publicar(client, "8aRecibir", {"state": state})
 else:
     print("No se pudo conectar al broker MQTT")
