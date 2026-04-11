@@ -47,7 +47,7 @@ while True:
         if utime.ticks_diff(utime.ticks_ms(), last_send) >= 2000:
             data = ReturnRandTempHum()
             print("Enviando sensor:", data)
-            publicar(client, "8aRecibir", data)
+            publicar(client, "tempHumGhoul", data)
             last_send = utime.ticks_ms()
 
     print("WiFi desconectado, relanzando...")
