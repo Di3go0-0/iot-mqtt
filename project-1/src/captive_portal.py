@@ -2,6 +2,7 @@ import network
 import socket
 import utime
 from wifi_connection import connect
+from network_params import save_credentials
 
 PORTAL_HTML = """\
 <!DOCTYPE html>
@@ -84,7 +85,7 @@ ERROR_HTML = """\
 
 def start_portal(ap_ssid="esp32ghoul", ap_password="1223334444"):
     ap = network.WLAN(network.WLAN.IF_AP)
-    ap.active(True5
+    ap.active(True)
     ap.config(essid=ap_ssid, password=ap_password, authmode=3, max_clients=1)
 
     print("AP activo:", ap_ssid)
@@ -119,6 +120,7 @@ def start_portal(ap_ssid="esp32ghoul", ap_password="1223334444"):
                     if ssid:
                         print("Intentando conectar a:", ssid)
                         if connect(ssid, password):
+                            save_credentials(ssid, password)
                             _send_response(conn, SUCCESS_HTML)
                             conn.close()
                             utime.sleep(3)
