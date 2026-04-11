@@ -2,8 +2,7 @@ import random
 
 
 def ReturnRandTempHum():
-    temp = random.randint(30, 40)
-    hum = random.randint(70, 90)
+    temp = random.randint(35, 37)
+    hum = random.randint(75, 80)
 
     return {"temp": temp, "hum": hum}
-
