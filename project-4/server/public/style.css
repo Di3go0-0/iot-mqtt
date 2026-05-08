@@ -1,0 +1,72 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #1a1a2e;
+  color: #eee;
+  padding: 2rem;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #e94560;
+}
+
+h2 {
+  margin-bottom: 1rem;
+  color: #aaa;
+}
+
+.controls {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+button {
+  padding: 0.8rem 2.5rem;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.1s;
+}
+
+button:active { transform: scale(0.95); }
+
+#btn-on {
+  background: #2ca02c;
+  color: white;
+}
+
+#btn-off {
+  background: #d62728;
+  color: white;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.chart-box {
+  background: #16213e;
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+canvas { width: 100% !important; }
+
+@media (max-width: 700px) {
+  .charts { grid-template-columns: 1fr; }
+}

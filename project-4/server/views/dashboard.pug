@@ -1,0 +1,27 @@
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title IoT Dashboard - ESP-GHOUL
+    script(src="https://cdn.jsdelivr.net/npm/chart.js")
+    script(src="/socket.io/socket.io.js")
+    link(rel="stylesheet" href="/style.css")
+  body
+    h1 ESP-GHOUL Dashboard
+
+    .controls
+      h2 LED Control
+      .buttons
+        button#btn-on(onclick="sendLed(0)") ON
+        button#btn-off(onclick="sendLed(1)") OFF
+
+    .charts
+      .chart-box
+        h2 Temperature
+        canvas#tempChart
+      .chart-box
+        h2 Humidity
+        canvas#humChart
+
+    script(src="/app.js")

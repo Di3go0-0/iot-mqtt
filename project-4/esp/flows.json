@@ -1,0 +1,396 @@
+[
+    {
+        "id": "0e7783ca91784c3e",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "b40e9f9ae45e1de2",
+        "type": "ui_button",
+        "z": "0e7783ca91784c3e",
+        "name": "",
+        "group": "3ed06cbca1b4bcce",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "ON",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "{\"state\":0, \"user\": \"node-red\", \"to\": \"espGhoul\"}",
+        "payloadType": "json",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 290,
+        "y": 200,
+        "wires": [
+            [
+                "73d7611a9516e80e",
+                "7fa4a430bd60ba9a"
+            ]
+        ]
+    },
+    {
+        "id": "73d7611a9516e80e",
+        "type": "mqtt out",
+        "z": "0e7783ca91784c3e",
+        "name": "",
+        "topic": "iotled",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "5c4cf3f8a883c84c",
+        "x": 510,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "5d016a437978ecb6",
+        "type": "ui_button",
+        "z": "0e7783ca91784c3e",
+        "name": "",
+        "group": "3ed06cbca1b4bcce",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "OFF",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "{\"state\":1, \"user\": \"node-red\", \"to\": \"espGhoul\"}",
+        "payloadType": "json",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 290,
+        "y": 260,
+        "wires": [
+            [
+                "73d7611a9516e80e",
+                "7fa4a430bd60ba9a"
+            ]
+        ]
+    },
+    {
+        "id": "b6fdd573790a2bdd",
+        "type": "mqtt in",
+        "z": "0e7783ca91784c3e",
+        "name": "",
+        "topic": "iottemp",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "5c4cf3f8a883c84c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 290,
+        "y": 380,
+        "wires": [
+            [
+                "3942ed340ed5221c",
+                "502576a98c5befb2",
+                "eb411f15b3885666"
+            ]
+        ]
+    },
+    {
+        "id": "3942ed340ed5221c",
+        "type": "function",
+        "z": "0e7783ca91784c3e",
+        "name": "Hum",
+        "func": "\nreturn {payload: msg.payload.hum}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 460,
+        "wires": [
+            [
+                "6cc2143302c54ffc"
+            ]
+        ]
+    },
+    {
+        "id": "502576a98c5befb2",
+        "type": "function",
+        "z": "0e7783ca91784c3e",
+        "name": "Temp",
+        "func": "return { payload: msg.payload.temp }\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "\nreturn { payload: msg.payload.temp }",
+        "libs": [],
+        "x": 530,
+        "y": 380,
+        "wires": [
+            [
+                "adb27436b546ec8d"
+            ]
+        ]
+    },
+    {
+        "id": "adb27436b546ec8d",
+        "type": "ui_chart",
+        "z": "0e7783ca91784c3e",
+        "name": "",
+        "group": "3ed06cbca1b4bcce",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "label": "Temp",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 710,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6cc2143302c54ffc",
+        "type": "ui_chart",
+        "z": "0e7783ca91784c3e",
+        "name": "",
+        "group": "3ed06cbca1b4bcce",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "label": "Hum",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 710,
+        "y": 460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e997635d2ff8a5cc",
+        "type": "postgresql",
+        "z": "0e7783ca91784c3e",
+        "name": "",
+        "query": "",
+        "postgreSQLConfig": "21221e3c085e8298",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 790,
+        "y": 240,
+        "wires": [
+            [
+                "582dd015b541232c"
+            ]
+        ]
+    },
+    {
+        "id": "7fa4a430bd60ba9a",
+        "type": "function",
+        "z": "0e7783ca91784c3e",
+        "name": "Mapper",
+        "func": "// Este nodo específico busca los parámetros en msg.params\nmsg.params = [\n    msg.payload.user,\n    msg.payload.state.toString()\n];\n\nmsg.query = \"INSERT INTO logs (user_name, action) VALUES ($1, $2);\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 200,
+        "wires": [
+            [
+                "e997635d2ff8a5cc"
+            ]
+        ]
+    },
+    {
+        "id": "eb411f15b3885666",
+        "type": "function",
+        "z": "0e7783ca91784c3e",
+        "name": "mapper temp",
+        "func": "// Extraemos los valores del objeto original\nlet temp = msg.payload.temp;\nlet hum = msg.payload.hum;\n\n// 1. Para las gráficas:\n// Creamos una propiedad extra para no sobreescribir el payload\nmsg.tempValue = temp;\nmsg.humValue = hum;\n\n// 2. Para Postgres:\n// Pasamos ambos valores en el array de parámetros\nmsg.params = [\n    String(temp),\n    String(hum)\n];\n\nmsg.query = \"INSERT INTO public.temp_hum (temp, hum) VALUES ($1, $2);\"\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 320,
+        "wires": [
+            [
+                "e997635d2ff8a5cc"
+            ]
+        ]
+    },
+    {
+        "id": "582dd015b541232c",
+        "type": "debug",
+        "z": "0e7783ca91784c3e",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 960,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "3ed06cbca1b4bcce",
+        "type": "ui_group",
+        "name": "ESP-GHOUL",
+        "tab": "c81707d822d7eb1c",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "5c4cf3f8a883c84c",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker.hivemq.com",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "21221e3c085e8298",
+        "type": "postgreSQLConfig",
+        "name": "iot",
+        "host": "127.0.0.1",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "iot",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": 10000,
+        "connectionTimeoutFieldType": "num",
+        "user": "admin",
+        "userFieldType": "str",
+        "password": "admin123",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "c81707d822d7eb1c",
+        "type": "ui_tab",
+        "name": "Default",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "fe8b173308bcf33c",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6",
+            "node-red-contrib-postgresql": "0.15.4"
+        }
+    }
+]
