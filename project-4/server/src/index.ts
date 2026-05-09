@@ -77,12 +77,6 @@ function handleKeyExchange(data: any) {
 function handleServerTopic(data: any) {
   const { pub, action, to, ciphertext, tag, nonce } = data;
 
-  if (to !== "server") {
-    // Reenviar a iot_esp_topic para que el ESP destino lo reciba
-    mqttClient.publish(TOPIC_ESP, JSON.stringify(data));
-    return;
-  }
-
   // Buscar la aesKey del remitente por su llave publica
   const senderKey = findKeyByPub(pub);
   if (!senderKey) {
@@ -90,9 +84,32 @@ function handleServerTopic(data: any) {
     return;
   }
 
+  // Desencriptar mensaje del remitente
   const plaintext = decrypt(ciphertext, tag, nonce, senderKey.aesKey);
   const payload = JSON.parse(plaintext);
   console.log("Datos descifrados:", payload);
+
+  if (to !== "server") {
+    // Reenviar: re-encriptar con la llave del destinatario
+    const destKey = clientKeys[to];
+    if (!destKey) {
+      console.error(`No se encontro llave para destino: ${to}`);
+      return;
+    }
+
+    const reEncrypted = encrypt(plaintext, destKey);
+    const relayPayload = {
+      pub: serverPublicKey,
+      action,
+      to,
+      ciphertext: reEncrypted.ciphertext,
+      tag: reEncrypted.tag,
+      nonce: reEncrypted.nonce,
+    };
+    mqttClient.publish(TOPIC_ESP, JSON.stringify(relayPayload));
+    console.log(`Mensaje reenviado a ${to}`);
+    return;
+  }
 
   if (action === "humtemp") {
     const temp = payload.temp;
