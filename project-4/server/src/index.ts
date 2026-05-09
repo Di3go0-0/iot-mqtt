@@ -4,10 +4,13 @@ import { Server } from "socket.io";
 import mqtt from "mqtt";
 import path from "path";
 import { Pool } from "pg";
+import { initCrypto, encryptValue, decryptValue } from "./crypto";
 
 const app = express();
 const http = createServer(app);
 const io = new Server(http);
+
+const { publicKey: serverPublicKey, aesKey } = initCrypto();
 
 // PostgreSQL
 const pool = new Pool({
@@ -29,13 +32,18 @@ mqttClient.on("connect", () => {
 mqttClient.on("message", (_topic, message) => {
   try {
     const data = JSON.parse(message.toString());
-    const temp = data.temp;
-    const hum = data.hum;
+    console.log(data)
 
-    // Emit to dashboard
+    let temp = data.temp;
+    let hum = data.hum;
+
+    if (typeof temp === "string" && typeof hum === "string") {
+      temp = Number(decryptValue(temp, aesKey));
+      hum = Number(decryptValue(hum, aesKey));
+    }
+
     io.emit("sensorData", { temp, hum });
 
-    // Save to PostgreSQL
     pool
       .query("INSERT INTO public.temp_hum (temp, hum) VALUES ($1, $2)", [
         String(temp),
@@ -61,9 +69,10 @@ app.get("/", (_req, res) => {
 app.post("/api/led", (req, res) => {
   const { state } = req.body;
   const payload = {
-    state: state,
+    state: encryptValue(state, aesKey),
     user: "web-dashboard",
     to: "espGhoul",
+    key: serverPublicKey,
   };
 
   mqttClient.publish("iotled", JSON.stringify(payload));

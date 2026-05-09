@@ -3,6 +3,7 @@ import ubinascii
 import machine
 from umqtt.robust import MQTTClient
 from machine import Pin
+from crypto_utils import encrypt_value, decrypt_value
 
 led_d4 = Pin(4, Pin.OUT)
 led_d4.off()
@@ -20,7 +21,7 @@ def conectar_mqtt(host="broker.hivemq.com", puerto=1883):
         return None
 
 
-def _crear_callback(my_user):
+def _crear_callback(my_user, crypto_ctx=None):
     def _on_message(topic, msg):
         try:
             data = ujson.loads(msg)
@@ -28,6 +29,9 @@ def _crear_callback(my_user):
 
             if data.get("to") != my_user:
                 return
+
+            if crypto_ctx and isinstance(data.get("state"), str):
+                data["state"] = int(decrypt_value(data["state"], crypto_ctx["aes_key"]))
 
             if "state" in data:
                 status = data["state"]
@@ -44,11 +48,20 @@ def _crear_callback(my_user):
     return _on_message
 
 
-def suscribirse(cliente, topico="ghoulLed", my_user=None):
-    cliente.set_callback(_crear_callback(my_user))
+def suscribirse(cliente, topico="ghoulLed", my_user=None, crypto_ctx=None):
+    cliente.set_callback(_crear_callback(my_user, crypto_ctx))
     cliente.subscribe(topico)
     print("Suscrito a:", topico)
 
 
-def publicar(cliente, topico, data):
-    cliente.publish(topico, ujson.dumps(data))
+def publicar(cliente, topico, data, crypto_ctx=None):
+    if crypto_ctx:
+        payload = dict(data)
+        payload["key"] = crypto_ctx["public_key"]
+        aes_key = crypto_ctx["aes_key"]
+        for field in ("temp", "hum", "state"):
+            if field in payload:
+                payload[field] = encrypt_value(payload[field], aes_key)
+        cliente.publish(topico, ujson.dumps(payload))
+    else:
+        cliente.publish(topico, ujson.dumps(data))

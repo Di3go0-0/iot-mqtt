@@ -5,12 +5,15 @@ from button import fue_presionado
 from wifi_connection import sta, led, connect
 from network_params import load_all_credentials, save_credentials
 from temp import ReturnRandTempHum
+from crypto_utils import init_crypto
 
 print("Iniciando en 3 segundos... (Ctrl+C para interrumpir)")
 utime.sleep(3)
 
 USER = "espGhoul"
 ESP8A = "8a"
+
+crypto_ctx = init_crypto()
 
 while True:
     try:
@@ -39,7 +42,7 @@ while True:
             utime.sleep(5)
             continue
 
-        suscribirse(client, "iotled", USER)
+        suscribirse(client, "iotled", USER, crypto_ctx)
         last_send = utime.ticks_ms()
 
         while sta.isconnected():
@@ -53,7 +56,7 @@ while True:
             if presionado:
                 print("Botón state:", state)
                 try:
-                    publicar(client, "iotled", {"state": state, "user": USER, "to": ESP8A})
+                    publicar(client, "iotled", {"state": state, "user": USER, "to": ESP8A}, crypto_ctx)
                 except Exception as e:
                     print("Error publicando botón:", e)
                     break
@@ -62,7 +65,7 @@ while True:
                 data = ReturnRandTempHum()
                 print("Enviando sensor:", data)
                 try:
-                    publicar(client, "iottemp", {"temp": data["temp"], "hum": data["hum"], "user": USER})
+                    publicar(client, "iottemp", {"temp": data["temp"], "hum": data["hum"], "user": USER}, crypto_ctx)
                 except Exception as e:
                     print("Error publicando sensor:", e)
                     break
