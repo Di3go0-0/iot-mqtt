@@ -4,11 +4,8 @@ import crypto from "crypto";
 const DH_P = 104729;
 const DH_G = 2;
 
-// Server private key (hardcoded)
+// Server private key
 const PRIVATE_KEY = 52319;
-
-// ESP public key (pre-computed: pow(2, 87321, 104729))
-const PEER_PUBLIC_KEY = 63935;
 
 function modPow(base: number, exp: number, mod: number): number {
   let result = 1;
@@ -23,31 +20,52 @@ function modPow(base: number, exp: number, mod: number): number {
   return result;
 }
 
-export function initCrypto(): { publicKey: number; aesKey: Buffer } {
-  const publicKey = modPow(DH_G, PRIVATE_KEY, DH_P);
-  const sharedSecret = modPow(PEER_PUBLIC_KEY, PRIVATE_KEY, DH_P);
-
-  const aesKey = crypto.createHash("sha256").update(String(sharedSecret)).digest();
-
-  console.log("DH public key:", publicKey);
-  console.log("Shared secret establecido");
-
-  return { publicKey, aesKey };
+export function getPublicKey(): number {
+  return modPow(DH_G, PRIVATE_KEY, DH_P);
 }
 
-export function encryptValue(value: number | string, aesKey: Buffer): string {
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv("aes-256-cbc", aesKey, iv);
-  let encrypted = cipher.update(String(value), "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return iv.toString("hex") + ":" + encrypted;
+export function computeSharedSecret(peerPublicKey: number): Buffer {
+  const shared = modPow(peerPublicKey, PRIVATE_KEY, DH_P);
+  return crypto.createHash("sha256").update(String(shared)).digest();
 }
 
-export function decryptValue(encryptedStr: string, aesKey: Buffer): string {
-  const [ivHex, ctHex] = encryptedStr.split(":");
-  const iv = Buffer.from(ivHex, "hex");
-  const decipher = crypto.createDecipheriv("aes-256-cbc", aesKey, iv);
-  let decrypted = decipher.update(ctHex, "hex", "utf8");
+export function encrypt(
+  plaintext: string,
+  aesKey: Buffer
+): { ciphertext: string; tag: string; nonce: string } {
+  const nonce = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv("aes-256-cbc", aesKey, nonce);
+  let ciphertext = cipher.update(plaintext, "utf8", "hex");
+  ciphertext += cipher.final("hex");
+
+  const tag = crypto
+    .createHmac("sha256", aesKey)
+    .update(Buffer.concat([nonce, Buffer.from(ciphertext, "hex")]))
+    .digest("hex");
+
+  return { ciphertext, tag, nonce: nonce.toString("hex") };
+}
+
+export function decrypt(
+  ciphertext: string,
+  tag: string,
+  nonce: string,
+  aesKey: Buffer
+): string {
+  const nonceBuffer = Buffer.from(nonce, "hex");
+  const ciphertextBuffer = Buffer.from(ciphertext, "hex");
+
+  const expectedTag = crypto
+    .createHmac("sha256", aesKey)
+    .update(Buffer.concat([nonceBuffer, ciphertextBuffer]))
+    .digest("hex");
+
+  if (tag !== expectedTag) {
+    throw new Error("Tag verification failed");
+  }
+
+  const decipher = crypto.createDecipheriv("aes-256-cbc", aesKey, nonceBuffer);
+  let decrypted = decipher.update(ciphertext, "hex", "utf8");
   decrypted += decipher.final("utf8");
   return decrypted;
 }

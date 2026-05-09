@@ -1,19 +1,16 @@
 import utime
 from captive_portal import start_portal
-from mqtt_client import conectar_mqtt, suscribirse, publicar
+from mqtt_client import conectar_mqtt, suscribirse, solicitar_llave, publicar, tiene_clave
 from button import fue_presionado
 from wifi_connection import sta, led, connect
 from network_params import load_all_credentials, save_credentials
 from temp import ReturnRandTempHum
-from crypto_utils import init_crypto
 
 print("Iniciando en 3 segundos... (Ctrl+C para interrumpir)")
 utime.sleep(3)
 
 USER = "espGhoul"
 ESP8A = "8a"
-
-crypto_ctx = init_crypto()
 
 while True:
     try:
@@ -30,7 +27,7 @@ while True:
 
         # Si no se pudo, lanzar portal cautivo
         if not connected:
-            print("Lanzando portal de configuración WiFi...")
+            print("Lanzando portal de configuracion WiFi...")
             start_portal()
 
         print("Conectando al broker MQTT...")
@@ -42,7 +39,24 @@ while True:
             utime.sleep(5)
             continue
 
-        suscribirse(client, "iotled", USER, crypto_ctx)
+        # Suscribirse a iot_pub_get y iot_esp_topic
+        suscribirse(client, USER)
+
+        # Solicitar llave publica del servidor
+        solicitar_llave(client, USER)
+
+        # Esperar a recibir la llave del servidor
+        print("Esperando llave del servidor...")
+        timeout = utime.ticks_ms()
+        while not tiene_clave():
+            client.check_msg()
+            if utime.ticks_diff(utime.ticks_ms(), timeout) > 10000:
+                print("Timeout esperando llave, reintentando...")
+                solicitar_llave(client, USER)
+                timeout = utime.ticks_ms()
+            utime.sleep_ms(100)
+
+        print("Clave compartida establecida, iniciando envio de datos")
         last_send = utime.ticks_ms()
 
         while sta.isconnected():
@@ -54,18 +68,18 @@ while True:
 
             presionado, state = fue_presionado()
             if presionado:
-                print("Botón state:", state)
+                print("Boton state:", state)
                 try:
-                    publicar(client, "iotled", {"state": state, "user": USER, "to": ESP8A}, crypto_ctx)
+                    publicar(client, "led", {"state": state}, USER, to=ESP8A)
                 except Exception as e:
-                    print("Error publicando botón:", e)
+                    print("Error publicando boton:", e)
                     break
 
             if utime.ticks_diff(utime.ticks_ms(), last_send) >= 2000:
                 data = ReturnRandTempHum()
                 print("Enviando sensor:", data)
                 try:
-                    publicar(client, "iottemp", {"temp": data["temp"], "hum": data["hum"], "user": USER}, crypto_ctx)
+                    publicar(client, "humtemp", {"temp": data["temp"], "hum": data["hum"]}, USER)
                 except Exception as e:
                     print("Error publicando sensor:", e)
                     break

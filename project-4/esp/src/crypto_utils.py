@@ -7,11 +7,8 @@ from ucryptolib import aes
 DH_P = 104729
 DH_G = 2
 
-# ESP private key (hardcoded)
+# ESP private key
 PRIVATE_KEY = 87321
-
-# Server public key (pre-computed: pow(2, 52319, 104729))
-PEER_PUBLIC_KEY = 19565
 
 
 def _mod_pow(base, exp, mod):
@@ -35,34 +32,64 @@ def _pkcs7_unpad(data):
     return data[:-pad_len]
 
 
-def init_crypto():
-    public_key = _mod_pow(DH_G, PRIVATE_KEY, DH_P)
-    shared_secret = _mod_pow(PEER_PUBLIC_KEY, PRIVATE_KEY, DH_P)
+def _hmac_sha256(key, message):
+    block_size = 64
+    if len(key) > block_size:
+        h = uhashlib.sha256()
+        h.update(key)
+        key = h.digest()
+    key = key + b'\x00' * (block_size - len(key))
 
+    o_key_pad = bytes([k ^ 0x5c for k in key])
+    i_key_pad = bytes([k ^ 0x36 for k in key])
+
+    h_inner = uhashlib.sha256()
+    h_inner.update(i_key_pad)
+    h_inner.update(message)
+    inner_hash = h_inner.digest()
+
+    h_outer = uhashlib.sha256()
+    h_outer.update(o_key_pad)
+    h_outer.update(inner_hash)
+    return h_outer.digest()
+
+
+def get_public_key():
+    return _mod_pow(DH_G, PRIVATE_KEY, DH_P)
+
+
+def compute_shared_secret(peer_public_key):
+    shared = _mod_pow(peer_public_key, PRIVATE_KEY, DH_P)
     h = uhashlib.sha256()
-    h.update(str(shared_secret).encode("utf-8"))
-    aes_key = h.digest()
-
-    print("DH public key:", public_key)
-    print("Shared secret establecido")
-
-    return {"public_key": public_key, "aes_key": aes_key}
+    h.update(str(shared).encode("utf-8"))
+    return h.digest()
 
 
-def encrypt_value(value, aes_key):
-    plaintext = str(value).encode("utf-8")
-    padded = _pkcs7_pad(plaintext)
-    iv = os.urandom(16)
-    cipher = aes(aes_key, 2, iv)
+def encrypt(plaintext, aes_key):
+    data = plaintext.encode("utf-8") if isinstance(plaintext, str) else plaintext
+    padded = _pkcs7_pad(data)
+    nonce = os.urandom(16)
+    cipher = aes(aes_key, 2, nonce)
     ciphertext = cipher.encrypt(padded)
-    return ubinascii.hexlify(iv).decode() + ":" + ubinascii.hexlify(ciphertext).decode()
+
+    tag = _hmac_sha256(aes_key, nonce + ciphertext)
+
+    return (
+        ubinascii.hexlify(ciphertext).decode(),
+        ubinascii.hexlify(tag).decode(),
+        ubinascii.hexlify(nonce).decode(),
+    )
 
 
-def decrypt_value(encrypted_str, aes_key):
-    iv_hex, ct_hex = encrypted_str.split(":")
-    iv = ubinascii.unhexlify(iv_hex)
-    ciphertext = ubinascii.unhexlify(ct_hex)
-    cipher = aes(aes_key, 2, iv)
+def decrypt(ciphertext_hex, tag_hex, nonce_hex, aes_key):
+    ciphertext = ubinascii.unhexlify(ciphertext_hex)
+    tag = ubinascii.unhexlify(tag_hex)
+    nonce = ubinascii.unhexlify(nonce_hex)
+
+    expected_tag = _hmac_sha256(aes_key, nonce + ciphertext)
+    if tag != expected_tag:
+        raise ValueError("Tag verification failed")
+
+    cipher = aes(aes_key, 2, nonce)
     padded = cipher.decrypt(ciphertext)
-    plaintext = _pkcs7_unpad(padded)
-    return plaintext.decode("utf-8")
+    return _pkcs7_unpad(padded).decode("utf-8")
