@@ -87,7 +87,7 @@ function handleServerTopic(data: any) {
   // Desencriptar mensaje del remitente
   const plaintext = decrypt(ciphertext, tag, nonce, senderKey.aesKey);
   const payload = JSON.parse(plaintext);
-  console.log("Datos descifrados:", payload);
+  console.log("Datos descifrados:", payload, to);
 
   if (to !== "server") {
     // Reenviar: re-encriptar con la llave del destinatario
@@ -108,6 +108,15 @@ function handleServerTopic(data: any) {
     };
     mqttClient.publish(TOPIC_ESP, JSON.stringify(relayPayload));
     console.log(`Mensaje reenviado a ${to}`);
+
+    if (action === "led") {
+      pool
+        .query(
+          "INSERT INTO logs (user_name, action, target) VALUES ($1, $2, $3)",
+          [payload.user, String(payload.state), to]
+        )
+        .catch((err) => console.error("DB log error:", err.message));
+    }
     return;
   }
 
@@ -118,10 +127,10 @@ function handleServerTopic(data: any) {
     io.emit("sensorData", { temp, hum });
 
     pool
-      .query("INSERT INTO public.temp_hum (temp, hum) VALUES ($1, $2)", [
-        String(temp),
-        String(hum),
-      ])
+      .query(
+        "INSERT INTO public.temp_hum (temp, hum, source) VALUES ($1, $2, $3)",
+        [String(temp), String(hum), payload.user]
+      )
       .catch((err) => console.error("DB insert error:", err.message));
   } else if (action === "led") {
     console.log(`LED action from ${payload.user}: state=${payload.state}`);
@@ -177,10 +186,10 @@ app.post("/api/led", (req, res) => {
   mqttClient.publish(TOPIC_ESP, JSON.stringify(payload));
 
   pool
-    .query("INSERT INTO logs (user_name, action) VALUES ($1, $2)", [
-      "server",
-      String(state),
-    ])
+    .query(
+      "INSERT INTO logs (user_name, action, target) VALUES ($1, $2, $3)",
+      ["dashboard", String(state), to]
+    )
     .catch((err) => console.error("DB log error:", err.message));
 
   res.json({ ok: true });

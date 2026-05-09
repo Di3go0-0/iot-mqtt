@@ -1,6 +1,12 @@
 import utime
 from captive_portal import start_portal
-from mqtt_client import conectar_mqtt, suscribirse, solicitar_llave, publicar, tiene_clave
+from mqtt_client import (
+    conectar_mqtt,
+    suscribirse,
+    solicitar_llave,
+    publicar,
+    tiene_clave,
+)
 from button import fue_presionado
 from wifi_connection import sta, led, connect
 from network_params import load_all_credentials, save_credentials
@@ -10,7 +16,7 @@ print("Iniciando en 3 segundos... (Ctrl+C para interrumpir)")
 utime.sleep(3)
 
 USER = "espGhoul"
-ESP8A = "8a"
+ESP8A = "esp8a"
 
 while True:
     try:
@@ -79,7 +85,12 @@ while True:
                 data = ReturnRandTempHum()
                 print("Enviando sensor:", data)
                 try:
-                    publicar(client, "humtemp", {"temp": data["temp"], "hum": data["hum"]}, USER)
+                    publicar(
+                        client,
+                        "humtemp",
+                        {"temp": data["temp"], "hum": data["hum"]},
+                        USER,
+                    )
                 except Exception as e:
                     print("Error publicando sensor:", e)
                     break
