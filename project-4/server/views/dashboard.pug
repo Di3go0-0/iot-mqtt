@@ -3,25 +3,51 @@ html(lang="es")
   head
     meta(charset="UTF-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
-    title IoT Dashboard - ESP-GHOUL
+    title IoT Dashboard
     script(src="https://cdn.jsdelivr.net/npm/chart.js")
     script(src="/socket.io/socket.io.js")
     link(rel="stylesheet" href="/style.css")
   body
-    h1 ESP-GHOUL Dashboard
+    h1 IoT Dashboard
 
-    .controls
-      h2 LED Control
-      .buttons
-        button#btn-on(onclick="sendLed(0)") ON
-        button#btn-off(onclick="sendLed(1)") OFF
+    .tabs
+      button.tab.active#tab-espGhoul(onclick="switchTab('espGhoul')")
+        span.status-dot#status-espGhoul
+        span espGhoul
+      button.tab#tab-esp8a(onclick="switchTab('esp8a')")
+        span.status-dot#status-esp8a
+        span esp8a
 
-    .charts
-      .chart-box
-        h2 Temperature
-        canvas#tempChart
-      .chart-box
-        h2 Humidity
-        canvas#humChart
+    .panel#panel-espGhoul
+      .controls
+        button.btn-on(onclick="sendLed(0, 'espGhoul')") ON
+        button.btn-off(onclick="sendLed(1, 'espGhoul')") OFF
+
+      .report-box#report-espGhoul
+        p.report-empty Sin datos disponibles
+
+      .charts
+        .chart-box
+          h3 Temperatura
+          canvas#tempChart-espGhoul
+        .chart-box
+          h3 Humedad
+          canvas#humChart-espGhoul
+
+    .panel.hidden#panel-esp8a
+      .controls
+        button.btn-on(onclick="sendLed(0, 'esp8a')") ON
+        button.btn-off(onclick="sendLed(1, 'esp8a')") OFF
+
+      .report-box#report-esp8a
+        p.report-empty Sin datos disponibles
+
+      .charts
+        .chart-box
+          h3 Temperatura
+          canvas#tempChart-esp8a
+        .chart-box
+          h3 Humedad
+          canvas#humChart-esp8a
 
     script(src="/app.js")

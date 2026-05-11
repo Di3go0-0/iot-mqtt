@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  telegram-bot:
+    build: .
+    container_name: telegram-bot
+    restart: always
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-8791517471:AAEfwJ5iJpTJfR72SggWSIg20Tfi1x-TBJU}
+      DB_HOST: host.docker.internal
+      DB_PORT: 5432
+      DB_NAME: iot
+      DB_USER: admin
+      DB_PASSWORD: admin123
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -2,71 +2,226 @@
 
 body {
   font-family: system-ui, sans-serif;
-  background: #1a1a2e;
-  color: #eee;
+  background: #0d1117;
+  color: #e6edf3;
   padding: 2rem;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 2rem;
-  color: #e94560;
+  margin-bottom: 1.5rem;
+  color: #58a6ff;
+  font-size: 1.6rem;
+  letter-spacing: 0.5px;
 }
 
-h2 {
-  margin-bottom: 1rem;
-  color: #aaa;
+h3 {
+  margin-bottom: 0.6rem;
+  color: #8b949e;
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #21262d;
+  margin-bottom: 1.5rem;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab:hover {
+  color: #e6edf3;
+}
+
+.tab.active {
+  color: #58a6ff;
+  border-bottom-color: #58a6ff;
+}
+
+/* Status dot */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #484f58;
+  display: inline-block;
+}
+
+.status-dot.online {
+  background: #3fb950;
+  box-shadow: 0 0 6px #3fb95088;
+}
+
+/* Panel */
+.panel { }
+.panel.hidden { display: none; }
+
+/* Controls */
 .controls {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.buttons {
   display: flex;
   justify-content: center;
   gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-button {
-  padding: 0.8rem 2.5rem;
-  font-size: 1.1rem;
+button.btn-on, button.btn-off {
+  padding: 0.6rem 2rem;
+  font-size: 1rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-weight: bold;
-  transition: transform 0.1s;
+  font-weight: 600;
+  transition: transform 0.1s, opacity 0.2s;
 }
 
-button:active { transform: scale(0.95); }
+button.btn-on:hover, button.btn-off:hover { opacity: 0.85; }
+button.btn-on:active, button.btn-off:active { transform: scale(0.95); }
 
-#btn-on {
-  background: #2ca02c;
-  color: white;
+button.btn-on {
+  background: #238636;
+  color: #fff;
 }
 
-#btn-off {
-  background: #d62728;
-  color: white;
+button.btn-off {
+  background: #da3633;
+  color: #fff;
 }
 
+/* Report */
+.report-box {
+  background: #161b22;
+  border: 1px solid #21262d;
+  border-radius: 8px;
+  padding: 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.report-empty {
+  color: #484f58;
+  text-align: center;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.report-header h4 {
+  color: #58a6ff;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.report-header .report-time {
+  color: #484f58;
+  font-size: 0.8rem;
+}
+
+.report-live {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.live-card {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  text-align: center;
+}
+
+.live-card .live-label {
+  font-size: 0.75rem;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.3rem;
+}
+
+.live-card .live-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.live-card .live-value.temp { color: #f0883e; }
+.live-card .live-value.hum { color: #58a6ff; }
+
+.report-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.stat-group {
+  background: #0d1117;
+  border: 1px solid #21262d;
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+}
+
+.stat-group .stat-title {
+  font-size: 0.75rem;
+  color: #8b949e;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 0.15rem 0;
+}
+
+.stat-row .stat-label { color: #8b949e; }
+.stat-row .stat-val { color: #e6edf3; font-weight: 500; }
+
+.trend-up { color: #f0883e; }
+.trend-down { color: #58a6ff; }
+.trend-stable { color: #3fb950; }
+
+/* Charts */
 .charts {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  max-width: 1000px;
-  margin: 0 auto;
+  gap: 1rem;
 }
 
 .chart-box {
-  background: #16213e;
-  padding: 1.5rem;
-  border-radius: 12px;
+  background: #161b22;
+  border: 1px solid #21262d;
+  padding: 1rem;
+  border-radius: 8px;
 }
 
 canvas { width: 100% !important; }
 
 @media (max-width: 700px) {
   .charts { grid-template-columns: 1fr; }
+  .report-live { grid-template-columns: 1fr; }
+  .report-stats { grid-template-columns: 1fr; }
 }

@@ -15,13 +15,16 @@ const serverPublicKey = getPublicKey();
 // Diccionario de llaves: usuario -> aesKey
 const clientKeys: Record<string, Buffer> = {};
 
+// Dispositivos conectados (key exchange exitoso)
+const connectedDevices: Record<string, boolean> = {};
+
 // PostgreSQL
 const pool = new Pool({
-  host: "127.0.0.1",
-  port: 5432,
-  database: "iot",
-  user: "admin",
-  password: "admin123",
+  host: process.env.DB_HOST || "127.0.0.1",
+  port: parseInt(process.env.DB_PORT || "5432"),
+  database: process.env.DB_NAME || "iot",
+  user: process.env.DB_USER || "admin",
+  password: process.env.DB_PASSWORD || "admin123",
 });
 
 // MQTT
@@ -63,6 +66,8 @@ function handleKeyExchange(data: any) {
 
   // Almacenar la llave compartida con este ESP
   clientKeys[espUser] = computeSharedSecret(espPublicKey);
+  connectedDevices[espUser] = true;
+  io.emit("deviceStatus", { user: espUser, online: true });
   console.log(`Llave almacenada para: ${espUser}`);
 
   // Responder con la llave publica del servidor
@@ -124,7 +129,7 @@ function handleServerTopic(data: any) {
     const temp = payload.temp;
     const hum = payload.hum;
 
-    io.emit("sensorData", { temp, hum });
+    io.emit("sensorData", { temp, hum, source: payload.user });
 
     pool
       .query(
@@ -195,9 +200,84 @@ app.post("/api/led", (req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/api/reporte/:device", async (req, res) => {
+  const device = req.params.device;
+
+  try {
+    const lastResult = await pool.query(
+      "SELECT temp, hum, created_at FROM temp_hum WHERE source = $1 ORDER BY created_at DESC LIMIT 1",
+      [device]
+    );
+
+    if (lastResult.rows.length === 0) {
+      res.json({ empty: true });
+      return;
+    }
+
+    const statsResult = await pool.query(
+      `SELECT
+        COUNT(*)::int AS count,
+        ROUND(AVG(temp::numeric), 1) AS avg_temp,
+        ROUND(MIN(temp::numeric), 1) AS min_temp,
+        ROUND(MAX(temp::numeric), 1) AS max_temp,
+        ROUND(AVG(hum::numeric), 1) AS avg_hum,
+        ROUND(MIN(hum::numeric), 1) AS min_hum,
+        ROUND(MAX(hum::numeric), 1) AS max_hum,
+        MIN(created_at) AS desde,
+        MAX(created_at) AS hasta
+      FROM (
+        SELECT temp, hum, created_at FROM temp_hum
+        WHERE source = $1 ORDER BY created_at DESC LIMIT 50
+      ) sub`,
+      [device]
+    );
+
+    const recentResult = await pool.query(
+      `SELECT ROUND(AVG(temp::numeric), 1) AS avg_temp, ROUND(AVG(hum::numeric), 1) AS avg_hum
+      FROM (SELECT temp, hum FROM temp_hum WHERE source = $1 ORDER BY created_at DESC LIMIT 10) sub`,
+      [device]
+    );
+
+    const prevResult = await pool.query(
+      `SELECT ROUND(AVG(temp::numeric), 1) AS avg_temp, ROUND(AVG(hum::numeric), 1) AS avg_hum
+      FROM (SELECT temp, hum FROM temp_hum WHERE source = $1 ORDER BY created_at DESC LIMIT 10 OFFSET 10) sub`,
+      [device]
+    );
+
+    const last = lastResult.rows[0];
+    const stats = statsResult.rows[0];
+    const recent = recentResult.rows[0];
+    const prev = prevResult.rows[0];
+
+    res.json({
+      empty: false,
+      last: { temp: last.temp, hum: last.hum, time: last.created_at },
+      stats: {
+        count: stats.count,
+        temp: { avg: stats.avg_temp, min: stats.min_temp, max: stats.max_temp },
+        hum: { avg: stats.avg_hum, min: stats.min_hum, max: stats.max_hum },
+        desde: stats.desde,
+        hasta: stats.hasta,
+      },
+      trend: {
+        temp: recent.avg_temp && prev.avg_temp
+          ? +(parseFloat(recent.avg_temp) - parseFloat(prev.avg_temp)).toFixed(1)
+          : null,
+        hum: recent.avg_hum && prev.avg_hum
+          ? +(parseFloat(recent.avg_hum) - parseFloat(prev.avg_hum)).toFixed(1)
+          : null,
+      },
+    });
+  } catch (err: any) {
+    console.error("Reporte error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Socket.IO
 io.on("connection", (socket) => {
   console.log("Client connected");
+  socket.emit("devicesInit", connectedDevices);
   socket.on("disconnect", () => console.log("Client disconnected"));
 });
 
